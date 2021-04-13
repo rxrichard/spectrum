@@ -1,0 +1,108 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./beerslider//beerslider.css">
+    <title>Conversor de imagem - Crie espectros utilizando suas imagens</title>
+    <meta name="description" content="Conversor de imagem em espectro de audio; imagem em som; audio espectro; espectrograma"> 
+    <meta name="keywords" content="som, imagem, som em imagem, imagem em som, espectro,espectrograma,conversor,image to sound, image to audio, image, sound, audio, spectrum, spectrogram, encoder">
+    <meta name="author" content="Alex Adam | Richard Bastos">
+    <meta name="og:title" property="og:title" content="Conversor de imagem - Crie espectros utilizando suas imagens">
+</head>
+
+<body>
+    <div class="container">
+        <div class="first-page">
+            <div class="big-title">
+                <a id="logo-link" href="https://github.com/alexadam/img-encode">Spectrum</a>
+                 Crie espectros utilizando suas imagens
+            </div>
+            <div class="before-after">
+                <div id="slider" class="beer-slider" data-beer-label="">
+                    <img class="before-after-img" src="./assets/images/monalisa_depois.png"alt="image as sound" />
+                    <div class="beer-reveal" data-beer-label="">
+                        <img class="before-after-img" src="./assets/images/monalisa_antes.jpg" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="page">
+            <button id="uploadImage" class="upload-image">Selecione sua imagem...</button>
+            <input id="fileBrowser" type="file" name="name" value="" accept="image/*">
+            <canvas id="canvas" class="invisible"></canvas>
+            <div class="label">
+                Ou selecione um de nossos modelos:
+            </div>
+
+            <div class="img-galery">
+                <img id="galleryImg1" class="gallery-item" src="./assets/images/monalisa_antes.jpg" alt="" />
+                <img id="galleryImg2" class="gallery-item" src="./assets/images/abaporu-romero-brito.jpg" alt="" />
+                <img id="galleryImg3" class="gallery-item" src="./assets/lenna.png" alt="" />
+            </div>
+            <div id="settings" class="settings invisible">
+                <div class="settings-row">
+                    <div class="control">
+                        Selecione a duração (1s a 99s): <input id="lengthInSeconds" type="number" class="nr-input" value="3" min="1"
+                            max="99" />
+                    </div>
+                </div>
+                <span>&darr;</span>
+
+                <button id="generateButton" class="upload-image">Converter</button>
+            </div>
+            <div style="min-height:100px">
+            </div>
+        </div>
+        <div id="previewPage" class="page invisible">
+            <div class="test-box-container">
+                <canvas id="spectrum-canvas" width="800px" height="600px"></canvas>
+                <div id="audioControls"></div>
+                <div id="play-icon">
+                    <div id="playButton" class="upload-image">Play></div>
+                </div>
+            </div>
+            <button id="download-link-container" class="upload-image">Download .WAV...</button>
+            <div class="footer">
+                <div class="credits">
+                    <div class="credits-title">
+                        Credits
+                    </div>
+                    <a href="https://github.com/alexadam/img-encode">Alex Adam</a>
+                    <a href="http://www.ohmpie.com/imageencode/">OhmPie</a>
+                    <a href="https://academo.org/demos/spectrum-analyzer/">Academo</a>
+                    <a href="https://gist.github.com/hackNightly/3776503">riffwave.js</a>
+                    <a href="https://github.com/eligrey/FileSaver.js">FileSaver</a>
+
+                </div>
+                <div class="connect">
+                    <a href="https://github.com/rxrichard/spectrum" class="connect-link"><img
+                            src="./assets/icons/github-64.png" alt="github" /></a>
+                    <a href="https://twitter.com/rxrichard" class="connect-link"><img src="./assets/icons/twitter.png"
+                            alt="twitter" /></a>
+                   
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div id="waitScreen" class="invisible">
+        <div id="waitMessage">Aguarde um momento...</div>
+    </div>
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/riffwave.js"></script>
+    <script src="js/FileSave.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="./beerslider/beerslider.js"></script>
+
+    
+    <script src="scripts.js">
+       
+    </script>
+
+</body>
+
+</html>
