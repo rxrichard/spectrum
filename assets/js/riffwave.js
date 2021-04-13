@@ -23,7 +23,7 @@ var FastBase64 = {
     encLookup: [],
 
     Init: function() {
-        for (var i=0; i<2048; i++) {
+        for (var i=0; i<4096; i++) {
             this.encLookup[i] = this.chars[i >> 6] + this.chars[i & 0x3F];
         }
     },
