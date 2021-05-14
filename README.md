@@ -10,7 +10,7 @@
 
 ## ✂ Sobre
 
-Spectrum é um projecto desenvolvido por por <a href="https://github.com/alexadam/">Alex Adam</a>. Foi realizados correçoes de bugs, estética e tradução.
+Spectrum é um projecto desenvolvido por por <a href="https://github.com/alexadam/img-encode">Alex Adam</a>. Foi realizados correçoes de bugs, estética e tradução.
  Esse repositorio serve para suporte do TCC em Gestão da Tecnologia da Informação pela FATEC JUNDIAI no ano de 2021  sob o tema de 
  PERICIA FORENSE – A UTILIZAÇÃO DA ESTEGANOGRAFIA EM MIDIAS DIGITAIS NO CRIME ORGANIZADO
 
