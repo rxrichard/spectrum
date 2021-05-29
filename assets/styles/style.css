@@ -1,9 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Dosis&family=VT323&display=swap");
 
 * {
-  font-family: "Dosis", sans-serif;
   box-sizing: border-box;
   color: rgb(0, 255, 42);
+  font-family: "Dosis", sans-serif;
 }
 
 html,
@@ -260,12 +260,12 @@ div.label {
 }
 .credits {
   display: flex;
-  flex-direction: column;
   width: 100%;
   align-items: center;
+  justify-content: space-around;
 }
 .credits-title {
-  font-size: 30px;
+  font-size: 25px;
   font-weight: bold;
 }
 .credits a {
