@@ -17,7 +17,7 @@ Spectrum é um projecto desenvolvido por por <a href="https://github.com/alexada
 
 ## 🌐 Para acessar: 
 
-[Spectrum -  by Richard Bastos](rxrichard.github.io/spectrum)
+[Spectrum -  by Richard Bastos](https://rxrichard.github.io/spectrum/)
 
 
 ## ⚙️ Ferramentas Utilizadas
