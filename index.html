@@ -1,108 +1,398 @@
-<html>
-
+<!doctype html>
+<html lang="pt-BR">
 <head>
-    <link rel="stylesheet" href="assets/styles/style.css">
-    <link rel="stylesheet" href="assets/styles/beerslider.css">
-    <title>Conversor de imagem - Crie espectros utilizando suas imagens</title>
-    <meta name="description" content="Conversor de imagem em espectro de audio; imagem em som; audio espectro; espectrograma"> 
-    <meta name="keywords" content="som, imagem, som em imagem, imagem em som, espectro,espectrograma,conversor,image to sound, image to audio, image, sound, audio, spectrum, spectrogram, encoder">
-    <meta name="author" content="Alex Adam | Richard Bastos">
-    <meta name="og:title" property="og:title" content="Conversor de imagem - Crie espectros utilizando suas imagens">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPECTRUM v2</title>
+<meta name="description" content="Esteganografia espectral: imagens visíveis no espectrograma de um áudio, com extração completa por OFDM + Reed–Solomon.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23000'/%3E%3Cpath d='M14 18c0-6 8-10 18-10s18 4 18 10c0 14-4 30-18 38C18 48 14 32 14 18z' fill='none' stroke='%2300ff41' stroke-width='3'/%3E%3Cpath d='M20 26l9 3M44 26l-9 3' stroke='%2300ff41' stroke-width='3'/%3E%3C/svg%3E">
 </head>
-
 <body>
-    <div class="container">
-        <div class="first-page">
-            <div class="big-title">
-                <a id="logo-link" href="https://github.com/alexadam/img-encode">Spectrum</a>
-                 Crie espectros utilizando suas imagens
-            </div>
-            <div class="before-after">
-                <div id="slider" class="beer-slider" data-beer-label="">
-                    <img class="before-after-img" src="./assets/images/monalisa_depois.png"alt="image as sound" />
-                    <div class="beer-reveal" data-beer-label="">
-                        <img class="before-after-img" src="./assets/images/monalisa_antes.jpg" />
-                    </div>
-                </div>
-            </div>
+<div class="fx-scan"></div><div class="fx-grain"></div><div class="vignette"></div>
+
+<header class="top">
+  <canvas id="rain"></canvas>
+  <div class="top-inner">
+    <div class="brand">
+      <!-- máscara minimalista (traço único) -->
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M13 17c0-6 8.5-10 19-10s19 4 19 10c0 15-4.5 31-19 40C17.5 48 13 32 13 17z" fill="none" stroke="#00ff41" stroke-width="1.6"/>
+        <path d="M19.5 25.5c3 -1.6 6.5 -.8 9 1.4M44.5 25.5c-3 -1.6 -6.5 -.8 -9 1.4" fill="none" stroke="#00ff41" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M21 39c3.5 2.6 7 -1 11 -1s7.5 3.6 11 1" fill="none" stroke="#00ff41" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M32 43.5v6.5" stroke="#00ff41" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M22.5 17.5c3 -1.2 6 -1.2 8 0M41.5 17.5c-3 -1.2 -6 -1.2 -8 0" fill="none" stroke="#0a8f2c" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1><span class="glitch" id="title" data-text="SPECTRUM">SPECTRUM</span> <b>v2</b></h1>
+        <span class="sub">ESTEGANOGRAFIA ESPECTRAL // IMAGEM → ÁUDIO → ESPECTRO</span>
+      </div>
+    </div>
+    <div class="status">
+      <span><span class="dot"></span>NÚCLEO ONLINE</span>
+      <span id="st-threads">WORKERS: 2</span>
+      <span id="st-clock">--:--:--</span>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-view="encode" role="tab"><span class="n">01</span>CODIFICAR</button>
+      <button class="tab" data-view="analyze" role="tab"><span class="n">02</span>ANÁLISE DE ESPECTRO</button>
+      <button class="tab" data-view="extract" role="tab"><span class="n">03</span>EXTRAÇÃO COMPLETA</button>
+      <button class="tab" data-view="lab" role="tab"><span class="n">04</span>LABORATÓRIO</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+<!-- ===================================================================
+     01 · CODIFICAR
+     =================================================================== -->
+<section class="view active" id="view-encode">
+  <div class="grid-2">
+    <div class="stack">
+      <div class="panel">
+        <div class="panel-h"><span class="tag">01.A</span> Imagem</div>
+        <div class="panel-b">
+          <label class="drop" id="img-drop">
+            <input type="file" id="img-file" accept="image/*">
+            <div class="thumb" id="img-thumb">◫</div>
+            <div class="meta"><div class="t" id="img-name">Solte uma imagem ou clique</div><div class="d" id="img-info">PNG · JPEG · WebP · GIF · qualquer resolução</div></div>
+          </label>
+          <div class="chips">
+            <button class="chip" data-sample="testcard">padrão de teste</button>
+            <button class="chip" data-sample="mask">glifo máscara</button>
+            <button class="chip" data-sample="monalisa">mona lisa</button>
+            <button class="chip" data-sample="text">mensagem</button>
+          </div>
+          <div class="sep"></div>
+          <label class="check"><input type="checkbox" id="opt-autolevel" checked> <span>Auto-níveis <small>(estica o histograma → mais contraste no espectro)</small></span></label>
+          <label class="check"><input type="checkbox" id="opt-invert"> <span>Inverter luminância</span></label>
         </div>
-        <div class="page">
-            <button id="uploadImage" class="upload-image">Selecione sua imagem...</button>
-            <input id="fileBrowser" type="file" name="name" value="" accept="image/*">
-            <canvas id="canvas" class="invisible"></canvas>
-            <div class="label">
-                Ou selecione um de nossos modelos:
-            </div>
+      </div>
 
-            <div class="img-galery">
-                <img id="galleryImg1" class="gallery-item" src="./assets/images/monalisa_antes.jpg" alt="" />
-                <img id="galleryImg2" class="gallery-item" src="./assets/images/abaporu-romero-brito.jpg" alt="" />
-                <img id="galleryImg3" class="gallery-item" src="./assets/lenna.png" alt="" />
-            </div>
-            <div id="settings" class="settings invisible">
-                <div class="settings-row">
-                    <div class="control">
-                        Selecione a duração (1s a 99s): <input id="lengthInSeconds" type="number" class="nr-input" value="3" min="1"
-                            max="99" />
-                    </div>
-                </div>
-                <span>&darr;</span>
+      <div class="panel">
+        <div class="panel-h"><span class="tag">01.B</span> Áudio hospedeiro</div>
+        <div class="panel-b">
+          <label class="drop" id="host-drop">
+            <input type="file" id="host-file" accept="audio/*,.wav,.flac,.mp3,.ogg,.m4a,.opus">
+            <div class="thumb" id="host-thumb">∿</div>
+            <div class="meta"><div class="t" id="host-name">Sem hospedeiro (portadora pura)</div><div class="d" id="host-info">Solte WAV/FLAC/MP3/OGG… ou use a demo</div></div>
+          </label>
+          <div class="chips">
+            <button class="chip" id="host-demo">gerar trilha demo (90 s)</button>
+            <button class="chip" id="host-clear">remover hospedeiro</button>
+          </div>
 
-                <button id="generateButton" class="upload-image">Converter</button>
-            </div>
-            <div style="min-height:100px">
-            </div>
         </div>
-        <div id="previewPage" class="page invisible">
-            <div class="test-box-container">
-                <canvas id="spectrum-canvas" width="800px" height="600px"></canvas>
-                <div id="audioControls"></div>
-                <div id="play-icon">
-                    <div id="playButton" class="upload-image">Play></div>
-                </div>
-            </div>
-            <button id="download-link-container" class="upload-image">Download .WAV...</button>
-            <div class="footer">
-                <div class="credits">
-                    <div class="credits-title">
-                        Credits
-                    </div>
-                    <a href="https://github.com/alexadam/img-encode">Alex Adam</a>
-                    <a href="http://www.ohmpie.com/imageencode/">OhmPie</a>
-                    <a href="https://academo.org/demos/spectrum-analyzer/">Academo</a>
-                    <a href="https://gist.github.com/hackNightly/3776503">riffwave.js</a>
-                    <a href="https://github.com/eligrey/FileSaver.js">FileSaver</a>
+      </div>
 
-                </div>
-                <div class="connect">
-                    <a href="https://github.com/rxrichard/spectrum" class="connect-link"><img
-                            src="./assets/icons/github-64.png" alt="github" /></a>
-                    <a href="https://twitter.com/rxrichard" class="connect-link"><img src="./assets/icons/twitter.png"
-                            alt="twitter" /></a>
-                   
-                </div>
-            </div>
+      <div class="panel">
+        <div class="panel-h"><span class="tag">01.C</span> Parâmetros</div>
+        <div class="panel-b">
+          <div class="field"><label>Perfil</label><span class="val" id="v-profile"></span>
+            <select class="ctl" id="opt-profile">
+              <option value="visual" selected>Visual máximo · contraste alto, dados p/ WAV sem perdas</option>
+              <option value="balanced">Equilibrado · DR 32 dB · RS 13%</option>
+              <option value="robust">Robusto · DR 24 dB · RS 25% · banda MP3 · sobrevive a MP3 real</option>
+              <option value="custom">Personalizado</option>
+            </select></div>
+          <div class="section-t">Tempo</div>
+          <div class="field"><label>Duração da imagem (s)</label><span class="val" id="v-dur"></span>
+            <input class="ctl" type="range" id="opt-dur-range" min="1" max="120" step="1" value="10"></div>
+          <div class="row" style="gap:8px;margin:-4px 0 10px">
+            <input type="number" id="opt-imgdur" value="10" min="0" max="3600" step="0.5" style="width:90px" title="0 = automática">
+            <button class="chip" data-dur="3">3 s</button><button class="chip" data-dur="5">5 s</button><button class="chip" data-dur="10">10 s</button><button class="chip" data-dur="20">20 s</button><button class="chip" data-dur="30">30 s</button><button class="chip" data-dur="0" title="sem hospedeiro: o necessário para a resolução nativa (pode ficar longo); com hospedeiro: o áudio inteiro">auto</button>
+          </div>
+          <div id="time-host" hidden>
+            <div class="field"><label>Início da imagem no hospedeiro (s)</label><span class="val" id="v-start"></span>
+              <input class="ctl" type="range" id="opt-start-range" min="0" max="100" step="0.1" value="0"></div>
+            <div class="row" style="gap:8px;margin:-4px 0 6px"><input type="number" id="opt-start" value="0" min="0" step="0.1" style="width:90px"> <span class="hint" id="v-start-hint"></span></div>
+            <label class="check"><input type="checkbox" id="opt-trim"> <span>Exportar só o trecho da imagem <small>(arquivo curto; senão o áudio inteiro, com a imagem nesse trecho)</small></span></label>
+          </div>
+          <p class="hint" style="margin:0 0 6px">Menos tempo = menos pixels (capacidade ≈ banda × tempo). Banda mais larga compensa.</p>
+          <div class="section-t">Domínio espectral</div>
+          <div class="field"><label>Banda da imagem</label><span class="val" id="v-band"></span>
+            <select class="ctl" id="opt-band">
+              <option value="high">Alta · 11–20 kHz (discreta)</option>
+              <option value="mid">Média · 5–20 kHz (mais linhas)</option>
+              <option value="wide">Ampla · 1–20 kHz (máxima visibilidade)</option>
+              <option value="mp3">Compatível MP3 · 4–15,5 kHz (abaixo do corte do LAME)</option>
+              <option value="ultra">Ultrassônica · 22–46 kHz @ 96 kHz (inaudível)</option>
+              <option value="custom">Personalizada…</option>
+            </select></div>
+          <div class="two" id="band-custom" hidden>
+            <div class="field inline"><label>f mín (Hz)</label><input class="ctl" type="number" id="opt-flo" value="11000" step="100"></div>
+            <div class="field inline"><label>f máx (Hz)</label><input class="ctl" type="number" id="opt-fhi" value="20000" step="100"></div>
+          </div>
+          <div class="two">
+            <div class="field"><label>Taxa de saída</label>
+              <select class="ctl" id="opt-fs"><option value="host" selected>igual ao original</option><option value="44100">44,1 kHz</option><option value="48000">48 kHz</option><option value="96000">96 kHz</option></select></div>
+            <div class="field"><label>FFT de pintura (N)</label>
+              <select class="ctl" id="opt-n"><option value="auto" selected>auto</option><option>1024</option><option>2048</option><option>4096</option><option>8192</option><option>16384</option></select></div>
+          </div>
+          <label class="check"><input type="checkbox" id="opt-fillband" checked> <span>Preencher a banda <small>(linhas de pixel ocupam vários bins)</small></span></label>
+          <label class="check"><input type="checkbox" id="opt-filldur" checked> <span>Preencher a duração <small>(colunas esticadas no tempo)</small></span></label>
+
+          <div class="section-t">Visibilidade × audibilidade</div>
+          <div class="field"><label>Intensidade (relativa ao hospedeiro)</label><span class="val" id="v-level"></span><input class="ctl" type="range" id="opt-level" min="-45" max="-3" step="1" value="-24"></div>
+          <div class="field"><label>Contraste espectral (faixa dinâmica)</label><span class="val" id="v-dr"></span><input class="ctl" type="range" id="opt-dr" min="18" max="72" step="1" value="42"><span class="hint ctl">maior = pretos mais pretos no espectro · menor = camada de dados mais robusta</span></div>
+          <label class="check"><input type="checkbox" id="opt-carve" checked> <span>Limpar a banda do hospedeiro <small>(carving → imagem nítida)</small></span></label>
+          <div class="field"><label>Mascaramento adaptativo</label><span class="val" id="v-mask"></span><input class="ctl" type="range" id="opt-mask" min="0" max="1" step="0.05" value="0"></div>
+
+          <div class="section-t">Camada de dados (fase) · extração completa</div>
+          <div class="two">
+            <div class="field"><label>Modulação</label>
+              <select class="ctl" id="opt-mod"><option value="off">desligada (só visual)</option><option value="bpsk">BPSK · 1 bit/célula</option><option value="qpsk" selected>QPSK · 2 bits/célula</option><option value="8psk">8-PSK · 3 bits/célula</option></select></div>
+            <div class="field"><label>Robustez (ECC)</label>
+              <select class="ctl" id="opt-nsym"><option value="16">RS(255,239) · 3%</option><option value="32" selected>RS(255,223) · 6%</option><option value="64">RS(255,191) · 13%</option><option value="96">RS(255,159) · 19%</option><option value="128">RS(255,127) · 25%</option></select></div>
+          </div>
+          <div class="field"><label>Conteúdo do payload</label>
+            <select class="ctl" id="opt-payload">
+              <option value="auto" selected>Arquivo original (se couber) → senão WebP ajustado</option>
+              <option value="webp">Sempre recodificar (WebP, máxima qualidade que cabe)</option>
+              <option value="none">Nenhum (só luminância visual)</option>
+            </select></div>
+          <div class="field"><label>Formato de saída</label><span class="val" id="v-out"></span>
+            <select class="ctl" id="opt-out">
+              <option value="auto" selected>Igual ao original (tamanho semelhante)</option>
+              <optgroup label="Sem perdas · extração bit-a-bit garantida">
+                <option value="flac16">FLAC 16 bits (~35–55% do WAV)</option>
+                <option value="flac24">FLAC 24 bits</option>
+                <option value="wav16">WAV PCM 16 bits</option>
+                <option value="wav24">WAV PCM 24 bits</option>
+                <option value="wav32">WAV float 32 bits</option>
+              </optgroup>
+              <optgroup label="Com perdas · menor arquivo">
+                <option value="mp3-320">MP3 320 kbps · corte ≈ 20 kHz</option>
+                <option value="mp3-256">MP3 256 kbps · corte ≈ 19,7 kHz</option>
+                <option value="mp3-192">MP3 192 kbps · corte ≈ 18,6 kHz</option>
+                <option value="mp3-160">MP3 160 kbps · corte ≈ 17,5 kHz</option>
+                <option value="mp3-128">MP3 128 kbps · corte ≈ 17 kHz</option>
+              </optgroup>
+            </select></div>
         </div>
-
+      </div>
     </div>
 
+    <div class="stack">
+      <div class="panel">
+        <div class="panel-h"><span class="tag">01.D</span> Capacidade <span class="right hint" id="cap-head"></span></div>
+        <div class="panel-b">
+          <div class="metrics" id="cap-metrics"></div>
+          <div id="cap-bars" style="margin-top:12px"></div>
+          <div class="msgs" id="cap-msgs"></div>
+        </div>
+      </div>
 
-    <div id="waitScreen" class="invisible">
-        <div id="waitMessage">Aguarde um momento...</div>
+      <div class="panel">
+        <div class="panel-h"><span class="tag">01.E</span> Preview espectral <span class="right"><span class="hint" id="prev-mode">plano de pintura</span></span></div>
+        <div class="panel-b">
+          <div class="preview-wrap"><div class="spectro" id="enc-preview"></div></div>
+          <div class="progress" id="enc-progress"><i></i></div>
+          <div class="log" id="enc-log">aguardando entrada<span class="cur"></span></div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn primary big" id="btn-encode">▶ EXECUTAR CODIFICAÇÃO</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="enc-out" hidden>
+        <div class="panel-h"><span class="tag">01.F</span> Saída</div>
+        <div class="panel-b">
+          <div class="metrics" id="enc-metrics"></div>
+          <div class="msgs" id="enc-mp3-msg"></div>
+          <div class="row" style="margin-top:14px">
+            <button class="btn primary" id="btn-download">⤓ BAIXAR</button>
+            <button class="btn" id="btn-to-analyze">◎ ABRIR NO ANALISADOR</button>
+            <button class="btn" id="btn-to-extract">⌗ EXTRAIR</button>
+            <button class="btn" id="btn-to-lab">⚗ TESTAR NO LAB</button>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+</section>
 
+<!-- ===================================================================
+     02 · ANÁLISE DE ESPECTRO (recuperação visual)
+     =================================================================== -->
+<section class="view" id="view-analyze">
+  <div class="panel">
+    <div class="panel-h"><span class="tag">02</span> Análise de espectro
+      <span class="right">
+        <label class="btn sm" for="an-file">⇪ carregar áudio</label><input type="file" id="an-file" accept="audio/*,.wav,.flac,.mp3,.ogg,.m4a,.opus" hidden>
+        <span class="hint" id="an-src">nenhum áudio</span>
+      </span>
+    </div>
+    <div class="toolbar">
+      <div class="grp"><label>modo</label>
+        <div class="seg" id="an-mode"><button data-v="full" class="on">análise completa</button><button data-v="live">cascata ao vivo</button></div></div>
+      <div class="grp"><label>cores</label>
+        <select id="an-cmap"><option value="matrix">Matrix Green</option><option value="thermal">Thermal</option><option value="plasma">Plasma</option><option value="classic">Classic</option><option value="ice">Ice</option></select>
+        <canvas class="cmap-swatch" id="an-swatch" width="54" height="8"></canvas></div>
+      <div class="grp"><label>contraste</label><input type="range" id="an-range" min="12" max="120" value="60"></div>
+      <div class="grp"><label>brilho</label><input type="range" id="an-floor" min="-160" max="-10" value="-100"></div>
+      <div class="grp"><label>gama</label><input type="range" id="an-gamma" min="0.4" max="2.2" step="0.05" value="1"></div>
+      <div class="grp"><button class="btn sm" id="an-auto">auto</button></div>
+      <div class="grp"><label>FFT</label>
+        <select id="an-n"><option value="auto">auto</option><option>1024</option><option>2048</option><option>4096</option><option>8192</option><option>16384</option><option>32768</option></select>
+        <select id="an-win"><option value="hann">Hann</option><option value="bh4">Blackman-Harris</option><option value="gauss">Gauss</option><option value="hamming">Hamming</option><option value="rect">Retangular</option></select></div>
+      <div class="grp"><label>freq</label><div class="seg" id="an-fscale"><button data-v="lin" class="on">lin</button><button data-v="log">log</button></div></div>
+    </div>
+    <div class="toolbar">
+      <div class="grp"><label>zoom tempo</label><input type="range" id="an-zx" min="0" max="1" step="0.001" value="0"></div>
+      <div class="grp"><label>zoom freq</label><input type="range" id="an-zy" min="0" max="1" step="0.001" value="0"></div>
+      <div class="grp"><label>faixa</label><input type="number" id="an-f0" value="0" step="100" style="width:80px"> – <input type="number" id="an-f1" value="24000" step="100" style="width:80px"> <span class="hint">Hz</span></div>
+      <div class="grp">
+        <button class="btn sm" id="an-fit" title="Enquadra a região da imagem com proporção correta">⌖ enquadrar imagem</button>
+        <button class="btn sm" id="an-aligned" title="Leitura OFDM exata de cada célula (precisa do beacon)">▦ grade alinhada</button>
+        <button class="btn sm" id="an-reset">⟲ tudo</button>
+        <button class="btn sm" id="an-freeze">❄ congelar</button>
+        <button class="btn sm" id="an-png">⤓ PNG</button>
+      </div>
+    </div>
+    <div class="analyzer-wrap"><div class="spectro" id="an-view"></div></div>
+    <div class="player" id="an-player">
+      <button class="btn icon-btn" id="pl-play" title="play/pause (espaço)">▶</button>
+      <span class="time" id="pl-time">00:00.00 / 00:00.00</span>
+      <div class="seek" id="pl-seek"><i></i></div>
+      <span class="hint">vol</span><input type="range" class="vol" id="pl-vol" min="0" max="1" step="0.01" value="0.6">
+    </div>
+    <div class="panel-b" style="border-top:1px solid var(--line)">
+      <div class="row hint" style="gap:18px">
+        <span><kbd>roda</kbd> zoom tempo</span><span><kbd>shift</kbd>+<kbd>roda</kbd> zoom frequência</span><span><kbd>arrastar</kbd> mover</span><span><kbd>duplo clique</kbd> resetar</span><span><kbd>espaço</kbd> play</span><span><kbd>F</kbd> congelar</span>
+        <span id="an-detect" style="margin-left:auto"></span>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/riffwave.js"></script>
-    <script src="assets/js/FileSave.js"></script>
-    <script src="assets/js/engine.js"></script>
-    <script src="assets/js/beerslider.js"></script>
+<!-- ===================================================================
+     03 · EXTRAÇÃO COMPLETA
+     =================================================================== -->
+<section class="view" id="view-extract">
+  <div class="grid-2">
+    <div class="stack">
+      <div class="panel">
+        <div class="panel-h"><span class="tag">03.A</span> Fonte</div>
+        <div class="panel-b">
+          <label class="drop" id="ex-drop">
+            <input type="file" id="ex-file" accept="audio/*,.wav,.flac,.mp3,.ogg,.m4a,.opus">
+            <div class="thumb">⌗</div>
+            <div class="meta"><div class="t" id="ex-name">Solte o áudio marcado</div><div class="d" id="ex-info">WAV é lido na taxa nativa (recomendado)</div></div>
+          </label>
+          <div class="chips"><button class="chip" id="ex-use-enc">usar o último áudio codificado</button></div>
+          <div class="sep"></div>
+          <label class="drop" id="ex-orig-drop" style="min-height:70px">
+            <input type="file" id="ex-orig-file" accept="image/*">
+            <div class="thumb" id="ex-orig-thumb" style="width:52px;height:52px">◫</div>
+            <div class="meta"><div class="t" id="ex-orig-name">Imagem original (opcional)</div><div class="d">para comparação lado a lado · PSNR · SSIM</div></div>
+          </label>
+          <button class="btn primary big" id="btn-extract" style="margin-top:14px">⌗ EXTRAIR</button>
+          <div class="progress" id="ex-progress"><i></i></div>
+          <div class="log" id="ex-log"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span class="tag">03.B</span> Relatório técnico</div>
+        <div class="panel-b" id="ex-report"><div class="empty-state">sem dados</div></div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <div class="panel-h"><span class="tag">03.C</span> Recuperado <span class="right" id="ex-dl"></span></div>
+        <div class="panel-b">
+          <div class="cmp" id="ex-cmp"><div class="empty-state">execute a extração</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span class="tag">03.D</span> Métricas de fidelidade</div>
+        <div class="panel-b"><div class="metrics" id="ex-metrics"><div class="metric"><div class="l">status</div><div class="v mut">—</div></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-    
-    <script src="assets/js/scripts.js">
-       
-    </script>
+<!-- ===================================================================
+     04 · LABORATÓRIO
+     =================================================================== -->
+<section class="view" id="view-lab">
+  <div class="grid-2">
+    <div class="stack">
+      <div class="panel">
+        <div class="panel-h"><span class="tag">04.A</span> Testes de resistência</div>
+        <div class="panel-b">
+          <p class="hint" style="margin-top:0">Aplica degradações ao último áudio codificado e roda a extração completa em cada uma. Simulações de codec são <b>aproximações perceptuais</b>; os testes MP3 REAL usam o codificador <b>LAME</b> e o decodificador do navegador, e o teste Opus usa o codificador real do navegador (MediaRecorder, em tempo real).</p>
+          <div id="lab-tests"></div>
+          <label class="check"><input type="checkbox" id="lab-mp3-320" checked> <span>MP3 REAL 320 kbps (LAME) <small>(codifica + decodifica de verdade)</small></span></label>
+          <label class="check"><input type="checkbox" id="lab-mp3-128" checked> <span>MP3 REAL 128 kbps (LAME)</span></label>
+          <label class="check"><input type="checkbox" id="lab-opus"> <span>Opus real via MediaRecorder <small>(leva a duração do áudio)</small></span></label>
+          <div class="row" style="margin-top:10px">
+            <button class="btn primary" id="btn-lab">⚗ EXECUTAR TESTES</button>
+            <button class="btn" id="btn-lab-stop">■ parar</button>
+          </div>
+          <div class="progress" id="lab-progress"><i></i></div>
+          <div class="log" id="lab-log"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span class="tag">04.B</span> Configurações avançadas</div>
+        <div class="panel-b">
+          <div class="field"><label>Transição entre colunas (T / N)</label><span class="val" id="v-trans"></span><input class="ctl" type="range" id="adv-trans" min="0.0625" max="0.5" step="0.0625" value="0.25"></div>
+          <div class="field"><label>Profundidade do carving</label><span class="val" id="v-carvedepth"></span><input class="ctl" type="range" id="adv-carvedepth" min="20" max="120" step="5" value="90"></div>
+          <div class="field inline"><label>Semente (0 = aleatória por codificação)</label><input class="ctl" type="number" id="adv-seed" value="0" min="0" style="width:120px"></div>
+          <p class="hint">A semente define as fases-base das linhas (fator de crista baixo) e a permutação de interleaving das células.</p>
+        </div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <div class="panel-h"><span class="tag">04.C</span> Resultados</div>
+        <div class="panel-b" style="overflow-x:auto">
+          <table class="t" id="lab-table">
+            <thead><tr><th>teste</th><th>beacon</th><th class="num">SNR</th><th class="num">BER pré-ECC</th><th class="num">bytes corrig.</th><th class="num">blocos falhos</th><th>arquivo</th><th class="num">PSNR luma</th><th>visual</th></tr></thead>
+            <tbody><tr><td colspan="9" class="empty-state">codifique algo e execute os testes</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span class="tag">04.D</span> Métricas técnicas da última codificação</div>
+        <div class="panel-b"><dl class="kv" id="lab-metrics"><dt>—</dt><dd></dd></dl></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
 
+<footer>
+  <div class="motto">SOMOS SINAL · SOMOS RUÍDO · NÃO ESQUECEMOS O QUE O ESPECTRO GUARDA</div>
+  SPECTRUM v2 — reescrita completa. Baseado no projeto <a href="https://github.com/rxrichard/spectrum">Spectrum</a> (Richard Bastos), derivado de <a href="https://github.com/alexadam/img-encode">img-encode</a> (Alex Adam). MIT.
+  Tudo roda localmente no seu navegador — nenhum dado sai da máquina.
+</footer>
+<div class="toast" id="toast"></div>
+
+<!-- núcleo (também injetado nos workers) -->
+<script src="assets/js/core/fft.js"></script>
+<script src="assets/js/core/util.js"></script>
+<script src="assets/js/core/rs.js"></script>
+<script src="assets/js/core/layout.js"></script>
+<script src="assets/js/core/encoder.js"></script>
+<script src="assets/js/core/decoder.js"></script>
+<script src="assets/js/core/stft.js"></script>
+<script src="assets/js/core/wav.js"></script>
+<script src="assets/js/core/lab.js"></script>
+<script src="assets/js/core/mp3.js"></script>
+<script src="assets/js/core/flac.js"></script>
+<!-- LAME (lamejs) — LGPL-3.0, biblioteca separada, sem modificações: assets/js/vendor/LAME-LICENSE.txt -->
+<script src="assets/js/vendor/lame.min.js"></script>
+<script src="assets/js/worker-bridge.js"></script>
+<!-- interface -->
+<script src="assets/js/ui/samples.js"></script>
+<script src="assets/js/ui/colormaps.js"></script>
+<script src="assets/js/ui/media.js"></script>
+<script src="assets/js/ui/spectro-view.js"></script>
+<script src="assets/js/ui/fx.js"></script>
+<script src="assets/js/ui/app.js"></script>
 </body>
-
 </html>
